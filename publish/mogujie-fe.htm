@@ -1,0 +1,277 @@
+<!--
+    Powered By nodePPT
+    version: 0.8.10
+    site: https://github.com/ksky521/nodePPT
+-->
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>面向多端的蘑菇街前端技术架构 - By beile</title>
+    <link rel="stylesheet" media="all" href="./css/nodeppt2.0.css">
+    <link rel="stylesheet" media="only screen and (max-device-width: 480px)" href="./css/phone.css">
+    <link rel="stylesheet" media="print" href="./css/pdf.css">
+    <link rel="stylesheet" href="./js/highlight/styles/monokai_sublime.css">
+</head>
+<body>
+<div class="slides">
+    <slides id="container">
+        <slide class="slide"><section class="slide-wrapper"><article class="flexbox vcenter">
+<h1>面向多端的蘑菇街前端技术架构</h1>
+<p><small>author: 贝勒</small><br><small>mail: beile@moguije.com</small></p>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><article class="flexbox vleft">
+<h1>团队介绍</h1>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>目前的技术架构</h2>
+
+</hgroup><article>
+
+<ul class="moveIn">
+<li><p>Webdemo - 本地开发环境</p>
+<ul class="moveIn">
+<li>Walkman - 前端自动化工具</li>
+<li>Magpie - MOGU-FE 底层</li>
+</ul>
+</li>
+<li><p>Lotus - 数据模拟系统</p>
+</li>
+<li><p>JsBridge - js 与 App 开发环境</p>
+</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>Webdemo</h2>
+
+</hgroup><article>
+
+<ul>
+<li><p>What ?</p>
+<ul class="moveIn">
+<li>本地开发环境</li>
+</ul>
+</li>
+<li><p>Why ?</p>
+<ul class="moveIn">
+<li>svn 代码太庞大</li>
+<li>后端服务太多，本地环境太复杂</li>
+</ul>
+</li>
+<li><p>How ?</p>
+<ul class="moveIn">
+<li>Nginx + PHP (Kohana)</li>
+<li>git: submodule (pc、h5、pad、im ...)</li>
+<li>FE 开发环境: require.js + less + magpie + lotus<ul class="moveIn">
+<li>如何处理 less ，php lessc -&gt; sourcemap</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>Magpie</h2>
+
+</hgroup><article>
+
+<ul>
+<li><p>What ?</p>
+<ul class="moveIn">
+<li>PC 牛郎 &amp; H5 织女，如何在一起？</li>
+</ul>
+</li>
+<li><p>Why ?</p>
+<ul class="moveIn">
+<li>团队合并，网站改版</li>
+<li>H5、PC 各自的一套开发体系，学习成本</li>
+<li>如何让 PC 能够无缝切换</li>
+</ul>
+</li>
+<li><p>How ?</p>
+<ul class="moveIn">
+<li>蘑菇街底层 js，统一各端的开发模式<ul>
+<li>全局变量：MoGu</li>
+<li>amd 的开发模式：define, require</li>
+<li>类 backbone 的 mv* ：</li>
+<li>base.js 作为底层库共各项目使用：magpie.pc.js ， magpie.h5.js</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>Walkman</h2>
+
+</hgroup><article>
+
+<ul>
+<li><p>What ?</p>
+<ul class="moveIn">
+<li>前端自动化构建工具</li>
+</ul>
+</li>
+<li><p>Why ?</p>
+<ul class="moveIn">
+<li>能自动的事情不要手动去做</li>
+<li>开发效率</li>
+<li>强大的 Grunt</li>
+</ul>
+</li>
+<li><p>How ?</p>
+<ul class="moveIn">
+<li>Grunt：流程构建</li>
+<li>r.js：打包 js</li>
+<li>lessc：打包 css</li>
+<li>yo：脚手架</li>
+</ul>
+</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>Lotus</h2>
+
+</hgroup><article>
+
+<ul>
+<li><p>What ?</p>
+<ul class="moveIn">
+<li>数据模拟系统</li>
+</ul>
+</li>
+<li><p>Why ?</p>
+<ul class="moveIn">
+<li>webdemo 没有数据层</li>
+</ul>
+</li>
+<li><p>How ?</p>
+<ul class="moveIn">
+<li>Mean.io</li>
+<li>根据接口直接生成文档</li>
+<li>先定接口再开发</li>
+</ul>
+</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>JsBridge</h2>
+
+</hgroup><article>
+
+<ul>
+<li>What ?<ul class="moveIn">
+<li>和 hybrid app 的开发环境</li>
+</ul>
+</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>目前的技术架构</h2>
+
+</hgroup><article>
+
+<ul class="moveIn">
+<li><p>Webdemo - 本地开发环境</p>
+<ul>
+<li>Magpie - MOGU-FE 底层</li>
+<li>Walkman - 前端自动化工具</li>
+</ul>
+</li>
+<li><p>Lotus - 数据模拟系统</p>
+</li>
+<li><p>JsBridge - js 与 App 开发环境</p>
+</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>后  记</h2>
+
+</hgroup><article>
+
+<ul class="moveIn">
+<li><p>关于选型</p>
+<ul>
+<li>小而美，可替换</li>
+<li>拥抱开源</li>
+</ul>
+</li>
+<li><p>效率 </p>
+<ul>
+<li>视团队而定，视规模而定</li>
+</ul>
+</li>
+<li><p>前后端分离</p>
+</li>
+<li><p>面向全端、面向全栈 </p>
+<ul>
+<li>前端只是写前端的？</li>
+</ul>
+</li>
+</ul>
+
+</article></section></slide>
+        <slide class="slide thank-you-slide segue nobackground">
+            <article class="flexbox vleft auto-fadein">
+                <h2>Thank You !</h2>
+				<h4>mailto: beile@mogujie.com</h4>
+            </article>
+        </slide>
+        <div class="slideTip" id="tip"></div>
+    </slides>
+</div>
+<canvas id="drawBoard" class="draw-board" width="900" height="700"></canvas>
+<div class="progress"><span id="progress"></span></div>
+<script src="./js/mixjs/lib/mix.0.3.0.min.js"></script>
+<script>
+var base = location.protocol + '//' + location.host;
+
+var path = location.pathname.split('/').filter(function(v){
+    return !!v;
+});
+path.pop();
+path = path.join('/');
+MixJS.config({
+    baseURL: [ base, path, 'js'].join('/')+'/'
+});
+
+
+MixJS.use('event/broadcast', function($){
+    $.loadJS('nodeppt.js',function(){
+        Slide.init({
+            containerID: 'container',
+            drawBoardID: 'drawBoard',
+            slideClass: '.slide',
+            buildClass: '.build',
+            progressID: 'progress',
+            transition: 'vertical3d',
+            width: 1100,
+            dir: './',
+            
+            //打开下面的注释就开启postMessage方式
+            //访问网址127.0.0.1:8080/ppt/demo#client
+            control:{
+                type: 'postMessage'
+            },
+            
+            tipID: 'tip'
+        });
+    }).loadJS('highlight/hljs-0.8.js',function(){
+        hljs.tabReplace = '  ';
+        hljs.initHighlightingOnLoad();
+    });
+});
+</script>
+<script src="./js/demo.js"></script>
+<link rel="stylesheet" href="./css/demo.css">
+</body>
+</html>
