@@ -8,7 +8,7 @@ files: /js/demo.js,/css/demo.css
 # 面向多端的蘑菇街前端技术架构 
 
 <small>author: 贝勒</small>  
-<small>mail: beile@moguije.com</small> 
+<small>mail: beile@mogujie.com</small> 
 
 [slide]
 
