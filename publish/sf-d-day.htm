@@ -1,0 +1,251 @@
+<!--
+    Powered By nodePPT - This is probably the best web presentation tool so far!
+    version: 1.2.2
+    site: https://github.com/ksky521/nodePPT
+-->
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>基于 React.js 的大规模网站开发实践 - By beile</title>
+    <link rel="stylesheet" media="all" href="./css/nodeppt.css">
+    <link rel="stylesheet" media="only screen and (max-device-width: 480px)" href="./css/phone.css">
+    <link rel="stylesheet" media="print" href="./css/pdf.css">
+    <link rel="stylesheet" href="./js/highlight/styles/monokai_sublime.css">
+    <link rel="stylesheet" href="./css/font-awesome.css">
+</head>
+<body>
+<div class="slides">
+    <slides id="container">
+        <slide class="slide"><section class="slide-wrapper"><article class="flexbox vcenter">
+<h1>基于 React.js 的大规模网站开发实践</h1>
+<p><small>author: 贝勒</small><br><small>mail: beile@mogujie.com</small></p>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>缘起</h2>
+
+</hgroup><article>
+
+<ul>
+<li><p>蘑菇街-小店 </p>
+<ul>
+<li><p><img src="./publish/img/code.png" alt=""></p>
+</li>
+<li><p><img src="./publish/img/xiaodian01.png" alt=""></p>
+</li>
+</ul>
+</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h3><a href="http://www.xiaodian.com" target="_blank">http://www.xiaodian.com</a></h3>
+
+</hgroup><article>
+
+<p><img src="./publish/img/xiaodian02.png" alt=""></p>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>为什么选型 React ?</h2>
+
+</hgroup><article>
+
+<ul>
+<li><p>Reactjs 是什么 ?</p>
+<ul>
+<li><p>A JAVASCRIPT LIBRARY FOR BUILDING USER INTERFACES</p>
+</li>
+<li><p><img src="./publish/img/img.png" alt=""></p>
+</li>
+</ul>
+</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>为什么选型 React ?</h2>
+
+</hgroup><article>
+
+<ul>
+<li>React Native</li>
+<li>支持 IE8</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>React</h2>
+
+</hgroup><article>
+
+<ul>
+<li><p>几个概念</p>
+<ul>
+<li>component 组件</li>
+<li>state 和 props</li>
+<li>Virtual Dom</li>
+</ul>
+</li>
+<li><p>看个例子</p>
+</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>mogu-react-app-generator</h2>
+
+</hgroup><article>
+
+<ul>
+<li>react</li>
+<li>webpack - 编译</li>
+<li><p>gulp - 前端自动化工具</p>
+</li>
+<li><p>Lotus - 数据模拟系统</p>
+</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>一些经验</h2>
+
+</hgroup><article>
+
+<ul>
+<li>双向绑定</li>
+<li>mixin</li>
+</ul>
+<pre><code>&lt;input className=&quot;xd-input primary&quot; type=&quot;password&quot; valueLink={this.linkValue(&#39;pwd&#39;)} /&gt;
+    linkValue: function(linkkey) {
+        var data = {};
+        return {
+            value: this.state[linkkey],
+            requestChange: function(newValue) {
+                data[linkkey] = newValue;
+                this.setState(data);
+            }.bind(this)
+        }
+    }
+</code></pre>
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>一些经验</h2>
+
+</hgroup><article>
+
+<ul>
+<li>数据传递 <ul>
+<li>leezq-react-model</li>
+<li>pubsub-js</li>
+<li>ES6 class</li>
+<li>封装了 save 等 ajax 方法，返回 promise</li>
+</ul>
+</li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>model</h2>
+
+</hgroup><article>
+
+<ul>
+<li><img src="./publish/img/model-demo.png" alt=""></li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>model</h2>
+
+</hgroup><article>
+
+<ul>
+<li><img src="./publish/img/event-demo.png" alt=""></li>
+</ul>
+
+</article></section></slide>
+<slide class="slide"><section class="slide-wrapper"><hgroup>
+<h2>总  结</h2>
+
+</hgroup><article>
+
+<ul>
+<li>React 带来的好处 <ul>
+<li>组件化开发</li>
+<li>前后端代码层面的分离</li>
+<li>面向 ES6</li>
+<li>React Native 的技术铺垫</li>
+</ul>
+</li>
+</ul>
+
+</article></section></slide>
+        <slide class="slide thank-you-slide segue nobackground">
+            <article class="flexbox vleft auto-fadein">
+                <h2>Q &amp; A</h2>
+                <h3>&lt;Thank You!&gt;</h3>
+            </article>
+        </slide>
+    </slides>
+</div>
+<canvas id="drawBoard" class="draw-board" width="900" height="700"></canvas>
+<div class="progress"><span id="progress"></span></div>
+<div id="_buttons">
+    <div class="_btn-box" id="_btn-box" style="display:none;">
+        <button class="fa fa-arrow-circle-left" id="_btn-prev"></button>
+        <button class="fa fa-arrow-circle-right" id="_btn-next"></button>
+        <button class="fa fa-paint-brush" id="_btn-brush"></button>
+        <button class="fa fa-compress" id="_btn-overview" data-toggle="fa fa-expand"></button>
+    </div>
+    <button class="fa fa-bars" id="_btn-bar"  data-toggle="fa fa-close"></button>
+</div>
+<script src="./js/mixjs/lib/mix.0.3.0.min.js"></script>
+<script>
+var base = location.protocol + '//' + location.host;
+
+var path = location.pathname.split('/').filter(function(v){
+    return !!v;
+});
+path.pop();
+path = path.join('/');
+MixJS.config({
+    baseURL: [ base, path, 'js'].join('/')+'/'
+});
+
+</script>
+<script src="./js/mixjs/lib/event/broadcast.js"></script>
+<script src="./js/nodeppt.js"></script>
+<script>
+Slide.init({
+    containerID: 'container',
+    drawBoardID: 'drawBoard',
+    slideClass: '.slide',
+    buildClass: '.build',
+    progressID: 'progress',
+    transition: 'vertical3d',
+    width: 1100,
+    dir: './',
+    
+    //打开下面的注释就开启postMessage方式
+    //访问网址127.0.0.1:8080/ppt/demo#client
+    control:{
+        type: 'postMessage',
+        args:{
+            isControl:  false
+        }
+    },
+    
+    tipID: 'tip'
+});
+MixJS.loadJS('highlight/hljs-0.8.js',function(){
+    hljs.tabReplace = '  ';
+    hljs.initHighlightingOnLoad();
+});
+</script>
+<script src="./js/demo.js"></script>
+<link rel="stylesheet" href="./css/demo.css">
+<!--placeholder-->
+</body>
+</html>

@@ -23,7 +23,7 @@ Slide.Control.add('socket', function(S, broadcast) {
         $body.appendChild($layer);
         var $container = document.getElementById('container');
 
-        showQrcode = function (e) {
+        showQrcode = function(e) {
             if (showQrcode.isShow) {
                 // $container.style.display = 'block';
                 $layer.style.display = 'none';
@@ -54,8 +54,13 @@ Slide.Control.add('socket', function(S, broadcast) {
                         } catch (e) {}
                         Slide.proxyFn(fnName, args);
                         break;
-                    default:
+                    case 'from control updateItem':
+                    case 'from control update':
+                    case 'from control key event':
                         broadcast.fire(action, data);
+                        break;
+                    default:
+                        broadcast.fire(action, data.data);
                 }
             });
 
@@ -79,21 +84,18 @@ Slide.Control.add('socket', function(S, broadcast) {
 
             webSocket.on('data from another client', function(data) {
                 var action = data.action;
+                if (action.indexOf('client') !== -1) {
+                    return;
+                }
                 action = action.replace('client', 'control');
+
                 broadcast.fire(action, data);
-                // switch (action) {
-                //     case 'from client update':
-                //         broadcast.fire('from control update', data);
-                //         break;
-                //     case 'from client updateItem':
-                //         broadcast.fire('from control updateItem', data);
-                //         break;
-                // }
             });
 
         },
         connect: function() {
-            webSocket = io.connect(this.host);
+            webSocket = io.connect(location.host + '/ppt');
+            // console.log(io);
             webSocket.on('UUID', function(uid) {
                 webSocket.uid = uid;
                 if (Socket.role === 'client') {
@@ -101,7 +103,7 @@ Slide.Control.add('socket', function(S, broadcast) {
                         qrcodeLink();
                         var url = location.href.split('#')[0];
                         url += (!~url.indexOf('?')) ? '?' : '&';
-                        url += 'iscontroller=1&clientid=' + uid;
+                        url += 'iscontroller=1&clientid=' + encodeURIComponent(uid);
                         var qrcode = new QRCode('qrcode', {
                             text: url,
                             width: 256,
@@ -113,24 +115,32 @@ Slide.Control.add('socket', function(S, broadcast) {
             });
             webSocket.on('system', function(data) {
                 // console.log(data);
-                if(showQrcode && showQrcode.isShow){
+                if (showQrcode && showQrcode.isShow) {
                     showQrcode();
                 }
             });
 
             this[this.role + 'Connect']();
         },
-        update: function(id) {
+        broadcast: function(evtName, data) {
             webSocket.emit('repost data', {
-                action: 'from ' + Socket.role + ' update',
-                id: id
+                action: 'from control ' + evtName,
+                data: data
             });
         },
-        updateItem: function(id, item) {
+        update: function(id, direction) {
+            webSocket.emit('repost data', {
+                action: 'from ' + Socket.role + ' update',
+                id: id,
+                direction: direction
+            });
+        },
+        updateItem: function(id, item, direction) {
             webSocket.emit('repost data', {
                 action: 'from ' + Socket.role + ' updateItem',
                 id: id,
-                item: item
+                item: item,
+                direction: direction
             });
         },
         keyEvent: function(keyCode) {
@@ -146,7 +156,6 @@ Slide.Control.add('socket', function(S, broadcast) {
             // console.log(this.clientUID);
             //角色，是否为控制端
             if (args.isControl) {
-                console.log(this.clientUID);
                 this.role = 'control';
                 var $body = document.body;
                 $body.classList.add('popup');
@@ -175,7 +184,7 @@ Slide.Control.add('socket', function(S, broadcast) {
                 //添加shake
                 MixJS.loadJS(Slide.dir + 'shake.js', function() {
                     var lastTime = Date.now();
-                    window.addEventListener('shake', function(){
+                    window.addEventListener('shake', function() {
                         var now = Date.now();
                         if (now - lastTime > 3000) {
                             lastTime = now;
@@ -186,9 +195,15 @@ Slide.Control.add('socket', function(S, broadcast) {
                 });
             }
 
-            MixJS.loadJS(socketIOURL, function() {
+            if (window.io && io.connect) {
+                //已经存在
                 Socket.connect();
-            });
+            } else {
+                MixJS.loadJS(socketIOURL, function() {
+                    Socket.connect();
+                });
+            }
+
         }
     };
     return Socket;

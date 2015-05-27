@@ -15,21 +15,31 @@ Slide.Control.add('postMessage', function(S, broadcast) {
     var postWin, popup, timer;
     var postMSG = {
         role: '', //角色
-        update: function(id) {
+        broadcast: function(evtName, data) {
+            if (postWin) {
+                window.opener.postMessage({
+                    action: evtName,
+                    data: data
+                }, '*');
+            }
+        },
+        update: function(id, direction) {
             if (postWin) {
                 window.opener.postMessage({
                     action: 'update',
-                    id: id
+                    id: id,
+                    direction: direction
                 }, '*');
             }
 
         },
-        updateItem: function(id, item) {
+        updateItem: function(id, item, direction) {
             if (postWin) {
                 window.opener.postMessage({
                     action: 'updateItem',
                     id: id,
-                    item: item
+                    item: item,
+                    direction: direction
                 }, '*');
             }
 
@@ -65,6 +75,8 @@ Slide.Control.add('postMessage', function(S, broadcast) {
                     } catch (e) {}
                     Slide.proxyFn(fnName, args);
                     break;
+                default:
+                    broadcast.fire('from control ' + data.action, data.data);
             }
 
         },

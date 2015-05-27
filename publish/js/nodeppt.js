@@ -28,9 +28,27 @@
     var $drawBoard; //画板
     var $slideTip;
     var slideCount; //幻灯片总页数-1
+    var QUERY = queryToJson(location.search);
+
+    function queryToJson(url) {
+        url = !!url ? decodeURIComponent(url) : '';
+
+        var locse = url.split('?'),
+            search = locse[1] ? locse[1] : locse[0],
+            pairs = search.split('&'),
+            result = {};
+
+        pairs.forEach(function(pair) {
+            pair = pair.split('=');
+            if (pair[0].length > 0) {
+                result[pair[0]] = pair[1] || '';
+            }
+        });
+
+        return result;
+    }
 
     //设置底部进度条
-
     function setProgress() {
         //添加dataset
         Slide.current = curIndex + 1;
@@ -40,33 +58,35 @@
     }
 
     //泛数组转换为数组
-
     function toArray(arrayLike) {
         return emptyArr.slice.call(arrayLike);
     }
-    //封装选择器
 
+    //封装选择器
     function $(selector, context) {
         context = (context && context.nodeType === 1) ? context : $doc;
         return context.querySelectorAll(selector);
     }
-    //getID方法
 
+    //getID方法
     function $$(id) {
         return $doc.getElementById(id);
     }
 
 
     //上一页
-    function prevSlide() {
-
+    function prevSlide(isControl) {
+        if (buildPrevItem()) {
+            return;
+        }
         slideOutCallBack($slides[curIndex]);
         pastIndex = curIndex;
         --curIndex < 0 && (curIndex = 0);
-        doSlide();
+        doSlide('prev', isControl ? false : true);
     }
+
     //下一页
-    function nextSlide() {
+    function nextSlide(isControl) {
         if (buildNextItem()) {
             // $B.fire('slide change ID',{
             //    slideID:curIndex
@@ -76,9 +96,11 @@
         slideOutCallBack($slides[curIndex]);
         pastIndex = curIndex;
         ++curIndex > slideCount && (curIndex = slideCount);
-        doSlide();
+        doSlide('next', isControl ? false : true);
         preload($slides[curIndex])($slides[curIndex + 1]);
     }
+
+
     //slide切入回调incallback
     //<slide data-incallback=""
     var slideInTimer;
@@ -88,7 +110,6 @@
             clearTimeout(slideInTimer);
         }
         slideInTimer = setTimeout(slideInCallBack_, 1500);
-
     }
 
     function slideInCallBack_() {
@@ -109,6 +130,7 @@
 
         }
     }
+
     //slide切出回调outcallback
     //<slide data-outcallback=""
     var slideOutTimer;
@@ -120,7 +142,7 @@
         if (slideOutTimer) {
             clearTimeout(slideOutTimer);
         }
-        slideOutTimer = setTimeout(function(){
+        slideOutTimer = setTimeout(function() {
             slideOutCallBack_(prev);
         }, 1500);
     }
@@ -133,7 +155,6 @@
 
     //预加载资源
     //<preload data-type="js||css" data-url="">
-
     function preload(node) {
         var self = arguments.callee;
         if (node && node.nodeType === 1) {
@@ -156,56 +177,122 @@
         }
         return self;
     }
+
+
     //单行前进
-
-    function buildNextItem() {
+    function buildNextItem(iscontrol) {
+        if ($body.classList.contains('overview')) {
+            return false;
+        }
         $curSlide = $slides[curIndex];
-        var builded = toArray($('.building'), $curSlide);
+        var subBuilded = toArray($('.building'), $curSlide);
         var list;
-        if (builded.length) {
+        if (subBuilded.length) {
 
-            while (list = builded.shift()) {
+            while (list = subBuilded.shift()) {
                 list = list.classList
                 list.remove('building');
-                list.add('build-fade');
+                list.add('builded');
             }
         }
-        var toBuild = $('.to-build', $curSlide);
+        var toBuild = $('.tobuild', $curSlide);
 
         if (!toBuild.length) {
             return false;
         }
 
         var item = toBuild.item(0);
-        $B.fire('slide do build', {
+        !iscontrol && $B.fire('slide do build', {
             slideID: curIndex,
+            direction: 'next',
             build: item.dataset.index
         })
         list = item.classList;
 
-        list.remove('to-build');
-        list.add('building');
+        $B.fire('slide.update', curIndex | 0, (item.dataset.index | 0) + 1, 'next');
+        list.remove('tobuild');
 
+        if (list.contains('subSlide')) {
+            toArray($('.subSlide.builded', $curSlide)).forEach(function($item) {
+                $item.classList.add('subBuilded');
+            });
+        }
+
+        list.add('building');
+        return true;
+    }
+
+    //单条往后走
+    function buildPrevItem() {
+        if ($body.classList.contains('overview')) {
+            return false;
+        }
+        $curSlide = $slides[curIndex];
+        var subBuilded = toArray($('.building'), $curSlide);
+        var list;
+        var buildingLen = subBuilded.length;
+        var curList;
+
+        if (buildingLen) {
+            while (list = subBuilded.shift()) {
+                var clist = list.classList
+                clist.remove('building');
+                clist.add('tobuild');
+                curList = list;
+                if (clist.contains('subSlide')) {
+                    var $item = toArray($('.subSlide.builded.subBuilded', $curSlide)).pop();
+                    $item && $item.classList.remove('subBuilded');
+                }
+            }
+        }
+        var builded = toArray($('.builded', $curSlide));
+        if (!builded.length && !buildingLen) {
+            return false;
+        }
+
+        var item = builded.pop();
+        if (item) {
+            if (!curList) {
+                curList = item;
+            }
+            list = item.classList;
+            list.remove('builded');
+            if (buildingLen === 0) {
+                list.add('tobuild');
+                item = builded.pop();
+                item.classList.remove('builded');
+                item.classList.add('building');
+            } else {
+                list.add('building');
+            }
+
+        }
+
+        $B.fire('slide do build', {
+            slideID: curIndex,
+            direction: 'prev',
+            build: curList.dataset.index
+        });
+        $B.fire('slide.update', curIndex | 0, (curList.dataset.index | 0) + 1, 'prev');
         return true;
     }
 
     //设置单行页面添加
-
     function makeBuildLists() {
         var i = slideCount;
         var slide;
         var transition = defaultOptions.transition;
-        var buildClass = '.build > *,.fadeIn > *,.moveIn > *,.bounceIn > *,.zoomIn > *';
+        var buildClass = '.build > *,.fadeIn > *,.rollIn > *,.moveIn > *,.bounceIn > *,.zoomIn > *,.fade > *,.subSlide';
         while (slide = $slides[i--]) {
-            var items = $(buildClass, slide);
+
+            var $items = toArray($(buildClass, slide));
             var dataset = slide.dataset;
-            for (var j = 0, item; item = items[j]; j++) {
-                var t = item.classList
-                if (t) {
-                    t.add('to-build');
-                    item.dataset.index = j;
-                }
-            }
+            $items.forEach(function($v, i) {
+                $v.classList.add('tobuild');
+                $v.dataset.index = i;
+            });
+
+
             if (!dataset.transition) {
                 dataset.transition = transition;
             }
@@ -214,28 +301,29 @@
     }
 
     //切换动画
-
-    function doSlide(slideID, isSync) {
+    function doSlide(direction, isSync) {
         ISSYNC = typeof isSync === 'boolean' ? isSync : true;
-        slideID = slideID === undefined ? curIndex : (slideID | 0);
-        curIndex = slideID;
 
         // $container.style.marginLeft = -(slideID * slideWidth) + 'px';
         updateSlideClass();
         setProgress();
         //发布slide切换状态广播
         ISSYNC && $B.fire('slide change ID', {
-            slideID: slideID
+            slideID: curIndex,
+            direction: direction
         });
         if (doHash) {
             lockSlide = true;
-            $win.location.hash = "#" + slideID;
+            $win.location.hash = "#" + curIndex;
         }
         slideInCallBack();
         removePaint();
+
         if ($doc.body.classList.contains('overview')) {
             focusOverview_();
             return;
+        } else if (!$doc.body.classList.contains('popup')) {
+            $doc.body.classList.remove('with-notes');
         }
 
     }
@@ -243,9 +331,9 @@
     function updateSlideClass() {
         var curSlide = curIndex;
         var pageClass = 'pagedown';
-        if(pastIndex===curIndex){
+        if (pastIndex === curIndex) {
             $cur = $slides[curIndex];
-            if($cur.classList.contains('pageup')){
+            if ($cur.classList.contains('pageup')) {
                 return;
             }
         }
@@ -277,12 +365,16 @@
                     break;
             }
         }
+        $B.fire('slide.update', curIndex, 0, pageClass);
 
     }
 
-    function overview() {
-        $doc.body.classList.toggle('overview');
+    function overview(isFromControl) {
+        $body.classList.toggle('overview');
         focusOverview_();
+        if (!isFromControl) {
+            $B.fire('overview');
+        }
     }
 
     function focusOverview_() {
@@ -293,6 +385,7 @@
                 '%, 0%)' : '';
             slide.style.animation = slide.style.webkitAnimation = slide.style.msAnimation = slide.style.mozAnimation = isOV ?
                 'none' : '';
+            Slide.fire(isOV ? 'overviewshown' : 'overviewhidden');
         }
     }
 
@@ -319,7 +412,6 @@
     }
 
     //显示tips
-
     function showTips(msg) {
         if (!$slideTip) {
             return;
@@ -335,7 +427,6 @@
     /*************************events***************/
 
     //pc键盘翻页事件逻辑
-
     function evtDocUp(e) {
         var key = e.keyCode;
         var target = e.target;
@@ -360,7 +451,7 @@
             case 13:
                 // Enter
                 if ($doc.body.classList.contains('overview')) {
-                    overview();
+                    overview(e.isFromControl);
                 }
 
                 break;
@@ -382,7 +473,7 @@
                 break;
             case 79:
                 // O: Toggle overview
-                overview();
+                overview(e.isFromControl);
 
                 break;
             case 78:
@@ -392,13 +483,14 @@
                 break;
             case 80:
                 //P
-                if (!$body.classList.contains('popup'))
-                    showPaint();
+                if (!$body.classList.contains('popup')) {
+                    showPaint(e.isFromControl);
+                }
                 break;
             case 67:
                 //c
                 if (!$body.classList.contains('popup')) {
-                    removePaint();
+                    removePaint(e.isFromControl);
                 }
                 break;
                 //上一页
@@ -429,10 +521,12 @@
         //        setProgress();
         //        setHistory();
     }
+
     /******************************** Touch events *********************/
+    var isStopTouchEvent = false;
 
     function evtTouchStart(event) {
-        if (event.touches.length == 1) {
+        if (!isStopTouchEvent && event.touches.length === 1) {
             touchDX = 0;
             touchDY = 0;
             var touch = event.touches[0];
@@ -443,8 +537,8 @@
             $body.addEventListener('touchend', evtTouchEnd, true);
         }
     }
-    //touch事件
 
+    //touch事件
     function evtTouchMove(event) {
         if (event.touches.length > 1) {
             cancelTouch();
@@ -454,9 +548,11 @@
             touchDX = touch.pageX - touchStartX;
             touchDY = touch.pageY - touchStartY;
         }
-    }
-    //touchend事件
+        event.preventDefault();
 
+    }
+
+    //touchend事件
     function evtTouchEnd(event) {
         var dx = Math.abs(touchDX);
         var dy = Math.abs(touchDY);
@@ -470,17 +566,66 @@
         }
         cancelTouch();
     }
-    //取消绑定
 
+    //取消绑定
     function cancelTouch() {
         $body.removeEventListener('touchmove', evtTouchMove, true);
         $body.removeEventListener('touchend', evtTouchEnd, true);
     }
-    //绑定事件
 
+    //绑定事件
     function bindEvent() {
         $doc.addEventListener('keyup', evtDocUp, false);
         $body.addEventListener('touchstart', evtTouchStart, false);
+        $$('_btn-bar').addEventListener('click', function() {
+            var isOpen = false;
+            return function() {
+                if (!isOpen) {
+                    this.classList.remove('fa-bars');
+                    this.classList.add('fa-close');
+                    $$('_btn-box').style.display = 'inline-block';
+                } else {
+                    this.classList.remove('fa-close');
+                    this.classList.add('fa-bars');
+                    $$('_btn-box').style.display = 'none';
+
+                }
+                isOpen = !isOpen;
+            };
+        }(), false);
+        $$('_btn-prev').addEventListener('click', prevSlide, false);
+        $$('_btn-next').addEventListener('click', nextSlide, false);
+        $$('_btn-overview').addEventListener('click', function() {
+            var isOpen = false;
+            return function() {
+
+                if (isOpen) {
+                    this.classList.add('fa-compress');
+                    this.classList.remove('fa-expand');
+                } else {
+                    this.classList.add('fa-expand');
+                    this.classList.remove('fa-compress');
+                }
+
+                overview();
+                isOpen = !isOpen;
+            };
+        }(), false);
+        $$('_btn-brush').addEventListener('click', function() {
+            var isOpen = false;
+            return function() {
+                if (isOpen) {
+                    this.classList.add('fa-paint-brush');
+                    this.classList.remove('fa-eraser');
+                    removePaint();
+                } else {
+                    showPaint();
+                    this.classList.add('fa-eraser');
+                    this.classList.remove('fa-paint-brush');
+                }
+                isOpen = !isOpen;
+            }
+        }(), false);
 
         $win.addEventListener('hashchange', function() {
             if (location.hash && !lockSlide) {
@@ -501,63 +646,132 @@
     //画图前准备
 
     function drawCanvasReady() {
-        $drawBoard.context = $drawBoard.getContext('2d');
-        var context = $drawBoard.context;
-        context.lineWidth = 3;
-        context.lineCap = 'round';
-        context.strokeStyle = "red";
-    }
-    //显示画板
-
-    function showPaint() {
-        if (!$drawBoard) {
-            return;
+            $drawBoard.context = $drawBoard.getContext('2d');
+            var context = $drawBoard.context;
+            context.lineWidth = 3;
+            context.lineCap = 'round';
+            context.strokeStyle = "red";
         }
-        $drawBoard.width = $body.clientWidth;
-        $drawBoard.height = $body.clientHeight;
-        drawCanvasReady();
+        //显示画板
+    var isControl = 0;
 
-        $drawBoard.style.display = '';
-        $container.style.overflow = 'hidden';
+    function showPaint(isFromControl) {
+            if (!$drawBoard) {
+                return;
+            }
 
-        $drawBoard.addEventListener('mousedown', pMouseDown, true);
-        $drawBoard.addEventListener('mouseup', pMouseUp, true);
-        $drawBoard.addEventListener('mousemove', pMouseMove, true);
-        $doc.addEventListener('selectstart', stopSelect, true);
+            //1、将翻页停止
+            isStopTouchEvent = true;
+            //2、将管理模式去掉
+            if ($body.classList.contains('with-notes')) {
+                isControl = 1;
+                $body.classList.remove('with-notes');
+                $body.classList.remove('popup');
+            }
+            $drawBoard.width = $body.clientWidth;
+            $drawBoard.height = $body.clientHeight;
+            drawCanvasReady();
 
-    }
-    //禁止选中
+            $drawBoard.style.display = '';
+            $container.style.overflow = 'hidden';
+
+            $drawBoard.addEventListener('mousedown', pMouseDown, true);
+            $drawBoard.addEventListener('mouseup', pMouseUp, true);
+            $drawBoard.addEventListener('mousemove', pMouseMove, true);
+            //滑动
+            $drawBoard.addEventListener('touchmove', pMouseMove, true);
+            $drawBoard.addEventListener('touchend', pMouseUp, true);
+            $drawBoard.addEventListener('touchcancel', pMouseUp, true);
+            $drawBoard.addEventListener('touchstart', pMouseDown, true);
+
+            $doc.addEventListener('selectstart', stopSelect, true);
+            if (!isFromControl) {
+                $B.fire('show paint');
+            }
+        }
+        //禁止选中
 
     function stopSelect() {
-        return false;
-    }
-    //清除画板内容
+            return false;
+        }
+        //清除画板内容
 
     function clearPaint() {
-        $container.style.overflow = '';
-        $drawBoard.context && $drawBoard.context.clearRect(0, 0, slideWidth, slideHeight);
-        $drawBoard.style.display = 'none';
-    }
-    //删除画板
-    var removePaint = function() {
+            $container.style.overflow = '';
+            $drawBoard.context && $drawBoard.context.clearRect(0, 0, slideWidth, slideHeight);
+            $drawBoard.style.display = 'none';
+        }
+        //删除画板
+    var removePaint = function(isFromControl) {
         clearPaint();
+        if (isControl) {
+            $body.classList.add('with-notes');
+            $body.classList.add('popup');
+        }
+        isStopTouchEvent = false;
         $drawBoard.removeEventListener('mousedown', pMouseDown);
         $drawBoard.removeEventListener('mouseup', pMouseUp);
         $drawBoard.removeEventListener('mousemove', pMouseMove);
+        //滑动
+        $drawBoard.removeEventListener('touchstart', pMouseDown);
+        $drawBoard.removeEventListener('touchmove', pMouseMove);
+        $drawBoard.removeEventListener('touchend', pMouseUp);
+        $drawBoard.removeEventListener('touchcancel', pMouseUp);
+
+
         $doc.removeEventListener('selectstart', stopSelect, true);
+        if (!isFromControl) {
+            $B.fire('remove paint');
+        }
     };
     var pMouseDown = function(e) {
         $drawBoard.isMouseDown = true;
         //        $drawBoard.iLastX = e.clientX - $drawBoard.offsetLeft + ($win.pageXOffset || $doc.body.scrollLeft || $doc.documentElement.scrollLeft);
         //        $drawBoard.iLastY = e.clientY - $drawBoard.offsetTop + ($win.pageYOffset || $doc.body.scrollTop || $doc.documentElement.scrollTop);
-        $drawBoard.iLastX = e.layerX || e.offsetX || (e.clientX - $drawBoard.offsetLeft + ($win.pageXOffset || $doc.body.scrollLeft || $doc.documentElement.scrollLeft));
-        $drawBoard.iLastY = e.layerY || e.offsetY || (e.clientY - $drawBoard.offsetTop + ($win.pageYOffset || $doc.body.scrollTop || $doc.documentElement.scrollTop));
+        var x = $drawBoard.iLastX = e.layerX || e.offsetX || (e.clientX - $drawBoard.offsetLeft + ($win.pageXOffset || $doc.body.scrollLeft || $doc.documentElement.scrollLeft));
+        var y = $drawBoard.iLastY = e.layerY || e.offsetY || (e.clientY - $drawBoard.offsetTop + ($win.pageYOffset || $doc.body.scrollTop || $doc.documentElement.scrollTop));
+        pPoints.push({
+            x: x,
+            y: y
+        });
     };
-    var pMouseUp = function() {
+    var pPoints = [];
+    var pMouseUp = function(e) {
         $drawBoard.isMouseDown = false;
         $drawBoard.iLastX = -1;
         $drawBoard.iLastY = -1;
+        if (!e.isFromControl) {
+            $B.fire('paint points', pPoints);
+        }
+        pPoints.length = 0;
     };
+    $B.on('from control paint points', function(data) {
+        // console.log(data);
+        var points = data.points;
+        //远程来的屏幕
+        var wh = data.screen;
+        var tOX = wh.width / 2,
+            tOY = wh.height / 2;
+
+        var width = $body.offsetWidth;
+        var height = $body.offsetHeight;
+        var cOX = width / 2,
+            cOY = height / 2;
+
+        var iw = width / wh.width;
+        var ih = height / wh.height;
+
+        var context = $drawBoard.context;
+        context.beginPath();
+        var startX = cOX - (tOX - points[0].x) * iw;
+        var startY = cOY - (tOY - points[0].y) * ih;
+        // console.log(startX, points[0].x, startY, iw, wh);
+        context.moveTo(startX, startY);
+        for (var i = 0, len = points.length; i < len; i++) {
+            context.lineTo(cOX - (tOX - points[i].x) * iw, cOY - (tOY - points[i].y) * ih);
+        }
+        context.stroke();
+    });
     var pMouseMove = function(e) {
         if ($drawBoard.isMouseDown) {
             //            var iX = e.clientX - $drawBoard.offsetLeft + ($win.pageXOffset || $doc.body.scrollLeft || $doc.documentElement.scrollLeft);
@@ -571,9 +785,13 @@
             context.stroke();
             $drawBoard.iLastX = iX;
             $drawBoard.iLastY = iY;
+            pPoints.push({
+                x: iX,
+                y: iY
+            });
+            e.preventDefault();
         }
     };
-
     //代理函数，用于函数控制
 
     function proxyFn(fnName, args) {
@@ -601,7 +819,6 @@
     };
 
     //初始化变量
-
     function initVar() {
 
         $slideTip = $$(defaultOptions.tipID);
@@ -610,8 +827,6 @@
         slideHeight = defaultOptions.height;
         $progress = $$(defaultOptions.progressID);
         Slide.$slides = $slides = toArray($(defaultOptions.slideClass, $container));
-
-
 
         slideCount = $slides.length; //幻灯片总页数-1
         Slide.count = slideCount;
@@ -632,8 +847,14 @@
             screenfull($imgs);
         });
     }
-    //初始化
 
+    function loadTheme() {
+        if (defaultOptions.theme) {
+            loadCSS('/css/theme.' + defaultOptions.theme + '.css')
+        }
+    }
+
+    //初始化
     function init(options) {
         options = options || {};
 
@@ -642,6 +863,12 @@
                 defaultOptions[key] = options[key];
             }
         }
+        ['theme', 'transition'].forEach(function(v) {
+            if (QUERY && QUERY[v]) {
+                defaultOptions[v] = QUERY[v];
+            }
+        });
+
         Slide.dir = defaultOptions.dir;
         if (defaultOptions.control) {
             var control = defaultOptions.control;
@@ -652,6 +879,7 @@
 
 
         initVar(); //初始化变量
+        loadTheme();
         makeBuildLists();
         fullImg(); //图片全屏
         bindEvent();
@@ -671,8 +899,19 @@
         next: nextSlide,
         prev: prevSlide,
         doSlide: doSlide,
-        proxyFn: proxyFn
+        proxyFn: proxyFn,
+        showPaint: showPaint,
+        removePaint: removePaint,
+        buildNextItem: buildNextItem,
+        buildPrevItem: buildPrevItem
     };
+    ['on', 'un', 'fire'].forEach(function(v) {
+        Slide[v] = function() {
+            var args = toArray(arguments);
+            args[0] = 'slide.' + args[0];
+            $B[v].apply(null, args);
+        }
+    });
 
     $win.Slide = Slide;
 
